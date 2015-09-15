@@ -1,10 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+import sys
 import urllib
 
 from docutils import frontend, nodes, writers
 
-# sys.stdout = codecs.getwriter('shift_jis')(sys.stdout)
+if sys.version < '3':
+    text_type = unicode
+    binary_type = str
+else:
+    text_type = str
+    binary_type = bytes
 
 
 class Writer(writers.Writer):
@@ -31,7 +38,7 @@ class Writer(writers.Writer):
         self.visitor.meta = {}
         self.document.walkabout(self.visitor)
         # Save some metadata as a comment, one per line.
-        self.output = unicode()
+        self.output = text_type()
         self.output += self.visitor.astext()
 
 
