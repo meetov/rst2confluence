@@ -1,8 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import urllib
+
+try:
+    from urllib.parse import unquote
+except ImportError:
+    from urllib import unquote
 
 from docutils import frontend, nodes, writers
+
+from collections import OrderedDict
 
 # sys.stdout = codecs.getwriter('shift_jis')(sys.stdout)
 
@@ -31,7 +37,7 @@ class Writer(writers.Writer):
         self.visitor.meta = {}
         self.document.walkabout(self.visitor)
         # Save some metadata as a comment, one per line.
-        self.output = unicode()
+        self.output = str()
         self.output += self.visitor.astext()
 
 
@@ -229,7 +235,7 @@ http://confluence.atlassian.com/display/DOC/Confluence+Notation+Guide+Overview
             else:
                 self._add("[")
                 self._add(node.children[0].astext() + "|")
-                self._add(urllib.unquote(node["refuri"]) + "]")
+                self._add(unquote(node["refuri"]) + "]")
         else:
             assert 'refid' in node, \
                    'References must have "refuri" or "refid" attribute.'
@@ -512,7 +518,8 @@ http://confluence.atlassian.com/display/DOC/Confluence+Notation+Guide+Overview
 
     def _print_image(self, node):
         uri = node['uri']
-        atts = {}
+        atts = OrderedDict()
+
         if 'alt' in node:
             atts['alt'] = node['alt']
         if 'title' in node:
@@ -526,12 +533,19 @@ http://confluence.atlassian.com/display/DOC/Confluence+Notation+Guide+Overview
             atts['thumbnail'] = True
         if 'align' in node:
             atts['align'] = node['align']
+
         attributes = []
-        for att in atts.iterkeys():
-            if atts[att] is True:
-                attributes.append(att)
+
+        try:
+            keys = atts.iterkeys()
+        except AttributeError:
+            keys = atts.keys()
+
+        for key in keys:
+            if atts[key] is True:
+                attributes.append(key)
             else:
-                attributes.append(att + "=" + atts[att])
+                attributes.append(key + "=" + atts[key])
 
         self._add("!")
         self._add(uri)
